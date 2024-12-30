@@ -7,8 +7,9 @@
 
 /*.rs.bk
 
-# VS Code settings
+# IDE artifacts
 .vscode/
+.idea
 
 # macOS
 .DS_Store
@@ -19,3 +20,8 @@ desktop.ini
 
 # Linux
 *.swp
+
+
+# Added by cargo
+
+/target
