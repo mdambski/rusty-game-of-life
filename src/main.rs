@@ -7,15 +7,16 @@ use std::{thread, time};
 use rand::Rng;
 
 
-const SLEEP_MILLIS_PER_ITERATION: u64 = 10;
+const SLEEP_PER_ITERATION_MS: u64 = 50;
 const GRID_SIZE: usize = 50;
+const MAX_HISTORY: usize = 10;
+const MAX_ITERATIONS: i32 = i32::MAX;
+
 const NEIGHBOR_OFFSETS: [(i32, i32); 8] = [
     (-1, -1), (-1, 0), (-1, 1),
     (0, -1),            (0, 1),
     (1, -1), (1, 0), (1, 1),
 ];
-const KILL_AFTER_ITERATIONS: i32 = 10_000;
-const MAX_HISTORY: usize = 10;
 
 type Grid = Vec<Vec<bool>>;
 
@@ -35,7 +36,7 @@ fn main() {
     seed(&mut grid);
 
     // Run simulation
-    for iteration in 0..KILL_AFTER_ITERATIONS {
+    for iteration in 0..MAX_ITERATIONS {
         display_grid(&grid, iteration);
         
         // Check for steady state or oscillation
@@ -59,7 +60,7 @@ fn main() {
         // Swap grids instead of copying or resetting
         std::mem::swap(&mut grid, &mut new_grid);
      
-        thread::sleep(time::Duration::from_millis(SLEEP_MILLIS_PER_ITERATION));
+        thread::sleep(time::Duration::from_millis(SLEEP_PER_ITERATION_MS));
     }
 }
 
