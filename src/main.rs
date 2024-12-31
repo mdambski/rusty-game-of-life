@@ -4,11 +4,31 @@ use std::io::{Write};
 use std::{thread, time};
 
 // External crate imports
+use clap::Parser;
 use rand::Rng;
 
+/// Command-line arguments parser
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Grid size for the simulation
+    #[arg(short, long, default_value_t = 30, value_parser = validate_grid_size)]
+    grid_size: usize,
+}
+
+fn validate_grid_size(value: &str) -> Result<usize, String> {
+    let grid_size: usize = value
+        .parse()
+        .map_err(|_| format!("`{}` isn't a valid number", value))?;
+
+    if (1..=100).contains(&grid_size) {
+        Ok(grid_size)
+    } else {
+        Err(format!("Grid size must be between 1 and 100, but got {}", grid_size))
+    }
+}
 
 const SLEEP_PER_ITERATION_MS: u64 = 50;
-const GRID_SIZE: usize = 50;
 const MAX_HISTORY: usize = 10;
 const MAX_ITERATIONS: i32 = i32::MAX;
 
@@ -21,15 +41,19 @@ const NEIGHBOR_OFFSETS: [(i32, i32); 8] = [
 type Grid = Vec<Vec<bool>>;
 
 /// Initializes the grid with all cells set to `false`.
-fn initialize_grid() -> Grid {
-    vec![vec![false; GRID_SIZE]; GRID_SIZE]
+fn initialize_grid(grid_size: usize) -> Grid {
+    vec![vec![false; grid_size]; grid_size]
 }
 
 
 /// Main simulation loop.
-fn main() {
-    let mut grid = initialize_grid();
-    let mut new_grid = initialize_grid();
+fn main() {    
+    let args = Args::parse(); 
+
+    clear_screen();
+
+    let mut grid = initialize_grid(args.grid_size);
+    let mut new_grid = initialize_grid(args.grid_size);
     let mut history: VecDeque<Grid> = VecDeque::with_capacity(MAX_HISTORY);
 
     // Make random seed
@@ -66,8 +90,12 @@ fn main() {
 
 /// Computes the next generation of the grid based on the current state.
 fn compute_next_generation(grid: &Grid, new_grid: &mut Grid) {
-    for row in 0..GRID_SIZE {
-        for col in 0..GRID_SIZE {    
+
+    let rows = grid.len();
+    let cols = grid[0].len();
+
+    for row in 0..rows {
+        for col in 0..cols {    
             let live_neighbors = count_live_neighbors(grid, row, col);
             new_grid[row][col] = match (grid[row][col], live_neighbors) {
                 // Live cell survives with 2 or 3 neighbors.
@@ -98,13 +126,19 @@ fn count_live_neighbors(grid: &Grid, row: usize, col: usize) -> i32 {
 }
 
 
+/// Clears the terminal screen.
+fn clear_screen() {
+    print!("\x1B[2J\x1B[H");
+    std::io::stdout().flush().expect("Failed to flush stdout");
+}
+
 /// Displays the grid in the terminal.
 fn display_grid(grid: &Grid, iteration: i32) {
 
     // use ANSI escape sequence
     print!("\x1B[H");
 
-    let mut output = String::with_capacity(GRID_SIZE * (GRID_SIZE + 1) + 20);
+    let mut output = String::with_capacity(grid.len() * (grid.len() + 1) + 20);
     for row in grid {
         for &cell in row {
             output.push_str(if cell { "# " } else { "- " });
@@ -124,13 +158,13 @@ fn display_grid(grid: &Grid, iteration: i32) {
 
 
 fn seed(grid: &mut Grid) {
- 
+    let grid_size = grid.len();
     let mut rng = rand::thread_rng();
-    let seed_number = rng.gen_range(GRID_SIZE..GRID_SIZE.pow(2)/5);
+    let seed_number = rng.gen_range(grid_size..grid_size.pow(2)/5);
 
     for _ in 0..seed_number {
-        let x: usize = rng.gen_range(0..GRID_SIZE);
-        let y: usize = rng.gen_range(0..GRID_SIZE);
+        let x: usize = rng.gen_range(0..grid_size);
+        let y: usize = rng.gen_range(0..grid_size);
         grid[x][y] = true;
     }
 }
