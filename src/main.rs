@@ -1,7 +1,4 @@
-// External crate imports
 use clap::Parser;
-
-// Modules
 mod game;
 
 
@@ -32,6 +29,6 @@ fn validate_grid_size(value: &str) -> Result<usize, String> {
 
 /// Main simulation loop.
 fn main() {    
-    let args = Args::parse(); 
-    game::run_simulation(args.grid_size, args.exit_steady);
+    let args: Args = Args::parse(); 
+    game::run_game_of_life_simulation(args.grid_size, args.exit_steady);
 }
